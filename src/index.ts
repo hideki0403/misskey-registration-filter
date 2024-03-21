@@ -1,4 +1,4 @@
-import { fetch } from '@cloudflare/workers-types/2023-07-01';  // Fix: Type 'Response' is missing the following properties from type 'Response': cf, webSocket
+import type { fetch as WorkersFetch } from '@cloudflare/workers-types/2023-07-01'
 import KV from './kv'
 import { createError } from './errors'
 
@@ -24,9 +24,9 @@ export default {
 		// #region country
 		const country = await kv.get('country')
 		if (country.has('tor')) {
-			// From docs:
-			// If your worker is configured to accept TOR connections, this may also be "T1", indicating a request that originated over TOR.
-			// The country code "T1" is used for requests originating on TOR.
+			// docs: https://developers.cloudflare.com/fundamentals/reference/http-request-headers/#cf-ipcountry
+			// > If your worker is configured to accept TOR connections, this may also be "T1", indicating a request that originated over TOR.
+			// > The country code "T1" is used for requests originating on TOR.
 			country.delete('tor')
 			country.add('t1')
 		}
@@ -61,6 +61,7 @@ export default {
 		}
 		// #endregion asOrganization
 
-		return await fetch(request)
+		// Fix: Type 'Response' is missing the following properties from type 'Response': cf, webSocket
+		return await (fetch as typeof WorkersFetch)(request)
 	},
 }
